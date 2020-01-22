@@ -40,7 +40,8 @@ steps:
           .
 
   # push container to GCR only if this pipeline was triggered from the master branch
-  - name: gcr.io/cloud-builders/docker
+  - id: push image if on master branch
+    name: gcr.io/cloud-builders/docker
     entrypoint: bash
     args:
     - -c

@@ -25,7 +25,7 @@ steps:
         path: /plan
 
   # Only trigger build if this pipeline was run from the master branch
-  - id: terraform apply
+  - id: terraform apply if on master branch
     name: gcr.io/cloud-builders/terraform
     entrypoint: bash
     args:
