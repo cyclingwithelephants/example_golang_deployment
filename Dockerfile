@@ -13,7 +13,6 @@ FROM golang AS builder
 # COPY go.mod go.sum ./
 # RUN go mod download
 
-# Assuming the source code is collocated to this Dockerfile
 COPY ./src/* .
 
 # Build the Go app with CGO_ENABLED=0 so we use the pure-Go implementations for
@@ -21,7 +20,7 @@ COPY ./src/* .
 # libraries)
 RUN CGO_ENABLED=0 \
     GOOS=linux \
-    go build -o /myapp
+    go build -o /app
 
 # Create a "nobody" non-root user for the next image by crafting an /etc/passwd
 # file that the next image can copy in. This is necessary since the next image
@@ -29,23 +28,23 @@ RUN CGO_ENABLED=0 \
 RUN echo "nobody:x:65534:65534:Nobody:/:" > /etc_passwd
 
 ############################
-# STEP 2 build a small image
+# STEP 2 build a small image :)
 ############################
 
 FROM scratch
 
 # Copy the binary from the builder stage
-COPY --from=builder /myapp /myapp
+COPY --from=builder /app /app
 
 # Copy the certs from the builder stage
-COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+# Currently doesn't exist
+# COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 # Copy the /etc_passwd file we created in the builder stage into /etc/passwd in
-# the target stage. This creates a new non-root user as a security best
-# practice.
+# the target stage. This creates a new non-root user.
 COPY --from=builder /etc_passwd /etc/passwd
 
 # Run as the new non-root by default
 USER nobody
 
-ENTRYPOINT ["/myapp"]
+ENTRYPOINT ["/app"]

@@ -1,0 +1,42 @@
+
+options:
+  env:
+    PLAN_FILEPATH: /workspace/
+
+steps:
+  - id: terraform init
+    name: gcr.io/cloud-builders/terraform
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        terraform init
+
+  - id: terraform plan
+    name: gcr.io/cloud-builders/terraform
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        terraform plan \
+          -out=/plan/file
+    volumes:
+      - name: terraform plan file
+        path: /plan
+
+  # Only trigger build if this pipeline was run from the master branch
+  - id: terraform apply
+    name: gcr.io/cloud-builders/terraform
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        if [[ "$BRANCH_NAME" == "master" ]]; then
+          echo "applying plan as this build was triggered from the master branch."
+          terraform plan \
+            -auto-approve \
+            -state=/plan/file
+        fi
+    volumes:
+      - name: terraform plan file
+        path: /plan
